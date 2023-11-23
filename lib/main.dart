@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import './colors.dart';
 import './database.dart';
 
-void main() async{
+void main() async {
   // initDb();
+
+  WidgetsFlutterBinding.ensureInitialized();
   await initializeHive();
   _notes = await getData();
   runApp(const Notes());
@@ -49,7 +51,10 @@ class _NotesAppState extends State<NotesApp> {
   }
 
   UI ui = UI();
+
   void _showAddNoteModal(BuildContext context) {
+    TextEditingController titleController = TextEditingController();
+    TextEditingController contentController = TextEditingController();
     showModalBottomSheet(
       backgroundColor: Colors.transparent,
       context: context,
@@ -64,51 +69,84 @@ class _NotesAppState extends State<NotesApp> {
                   topLeft: Radius.circular(20), topRight: Radius.circular(20))),
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          //  crossAxisAlignment: CrossAxisAlignment.,
             children: [
+              SizedBox(
+                height: 10,),
+              const Text(
+                'Add Note',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(
+                height: 10,),
               TextField(
+                controller: titleController,
                 decoration: const InputDecoration(
                   labelText: 'Title',
+                  
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    title = value;
-                  });
-                },
+              
               ),
               const SizedBox(height: 16),
               TextField(
+                controller: contentController,
                 decoration: const InputDecoration(
                   labelText: 'Content',
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    content = value;
-                  });
-                },
                 maxLines: null, // Set maxLines to null for multiline input
               ),
               const SizedBox(height: 16),
               SizedBox(
                 width: 100,
                 child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _notes.add(Note(
-                        dateTime: DateTime.now(),
-                        title: title,
-                        content: content,
-                      ));
-                    });
-                    pushData(Note(
+                  onPressed: () async{
+                    if (titleController.text.isEmpty ||
+                        contentController.text.isEmpty) {
+                      //show alert dialog
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Error'),
+                            content: const Text(
+                                'Please enter both title and content of the note'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      return;
+                    }
+                    var note = Note(
                       dateTime: DateTime.now(),
-                      title: title,
-                      content: content,
-                    ));
+                      title: titleController.text,
+                      content:  contentController.text,
+                    );
+                    setState(() {
+                      _notes.add(note);
+                    });
+                    await pushData(note);
                     Navigator.pop(context);
                   },
                   child: const Text('Save'),
+                  style: ElevatedButton.styleFrom(
+                    fixedSize: Size(100, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    
+                  ),
                 ),
+                  
               ),
             ],
           ),
@@ -120,46 +158,118 @@ class _NotesAppState extends State<NotesApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: ui.background,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           _showAddNoteModal(context);
         },
         child: const Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          Text(
-            'Notes',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyText1!.color,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Text(
+              'Notes',
+              style: TextStyle(
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).textTheme.bodyText1!.color,
+              ),
             ),
-          ),
-          ListView.builder(
-            padding: const EdgeInsets.all(16),
-            shrinkWrap: true,
-            itemCount: _notes.length,
-            itemBuilder: (context, index) {
-              return Container(
-                //
-                decoration: BoxDecoration(
-                  color: Theme.of(context).secondaryHeaderColor,
-                  border: Border.all(color: ui.extra),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ListTile(
-                  title: Text(_notes[index].title),
-                  subtitle: Text(
-                    _notes[index].content,
+            _notes.isEmpty
+                ? SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: const Center(
+                      child: Text('No notes yet'),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    shrinkWrap: true,
+                    itemCount: _notes.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          //
+                          //padding: EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+
+                            color: ui.primaryColor,
+                            border: Border.all(color: ui.extra),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.6),
+                                blurRadius: 8,
+                                spreadRadius: 0.8,
+                                offset: const Offset(5, 8),
+                              ),
+                            ],
+                          ),
+                          
+                          child: ListTile(
+                            title: Text(_notes[index].title),
+                            subtitle: Text(
+                              _notes[index].content,
+                              maxLines: null,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onLongPress: () {
+                              //show alert dialog
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('Delete Note'),
+                                    content: const Text(
+                                        'Are you sure you want to delete this note?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _notes.removeAt(index);
+                                            
+                                          });
+                                          deleteData(index);
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            trailing: Text(
+                                _notes[index].dateTime.day.toString() +
+                                    '/' +
+                                    _notes[index].dateTime.month.toString() +
+                                    '/' +
+                                    _notes[index].dateTime.year.toString() +
+                                    '\n\n' +
+                                    [
+                                      'Monday',
+                                      'Tuesday',
+                                      'Wednesday',
+                                      'Thursday',
+                                      'Friday',
+                                      'Saturday',
+                                      'Sunday'
+                                    ][_notes[index].dateTime.weekday - 1]),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  trailing: Text(_notes[index].dateTime.toString()),
-                ),
-              );
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

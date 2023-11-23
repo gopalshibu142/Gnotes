@@ -10,7 +10,7 @@ Future initializeHive() async {
   Hive.init(appDocumentDir.path);
 }
 
-void pushData(Note note) async {
+Future pushData(Note note) async {
   final notesBox = await Hive.openBox<Map>('notes');
   await notesBox.add({
     'title': note.title,
@@ -31,7 +31,16 @@ Future<List<Note>> getData() async {
       dateTime: noteMap['date'],
     );
   }).toList();
-  print(noteList[0].content);
+  for (var i = 0; i < noteList.length; i++) {
+    print(noteList[i].title);
+  }
+  //print(noteList[0].content);
   await notesBox.close();
   return noteList;
+}
+
+Future deleteData(int index) async {
+  final notesBox = await Hive.openBox('notes');
+  await notesBox.deleteAt(index);
+  await notesBox.close();
 }
