@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import './colors.dart';
+import './database.dart';
 
-void main() {
+void main() async{
+  // initDb();
+  await initializeHive();
+  _notes = await getData();
   runApp(const Notes());
 }
+
+var _notes = <Note>[];
 
 class Notes extends StatefulWidget {
   const Notes({Key? key}) : super(key: key);
@@ -18,8 +24,7 @@ class _NotesState extends State<Notes> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Notes',
-      theme: ThemeData.dark(
-      ),
+      theme: ThemeData.dark(),
       home: const NotesApp(),
     );
   }
@@ -33,11 +38,20 @@ class NotesApp extends StatefulWidget {
 }
 
 class _NotesAppState extends State<NotesApp> {
-  var _notes = <Note>[];
+  void initVal() async {
+    _notes = await getData();
+  }
+
+  @override
+  void initState() {
+    initVal();
+    super.initState();
+  }
+
   UI ui = UI();
   void _showAddNoteModal(BuildContext context) {
     showModalBottomSheet(
-      backgroundColor:Colors.transparent,
+      backgroundColor: Colors.transparent,
       context: context,
       builder: (BuildContext context) {
         String title = '';
@@ -45,9 +59,9 @@ class _NotesAppState extends State<NotesApp> {
 
         return Container(
           decoration: BoxDecoration(
-            color: ui.primaryColor,
-            borderRadius: BorderRadius.only(topLeft:Radius.circular(20),topRight: Radius.circular(20))
-          ),
+              color: ui.primaryColor,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20), topRight: Radius.circular(20))),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -63,7 +77,6 @@ class _NotesAppState extends State<NotesApp> {
                 },
               ),
               const SizedBox(height: 16),
-              
               TextField(
                 decoration: const InputDecoration(
                   labelText: 'Content',
@@ -87,6 +100,11 @@ class _NotesAppState extends State<NotesApp> {
                         content: content,
                       ));
                     });
+                    pushData(Note(
+                      dateTime: DateTime.now(),
+                      title: title,
+                      content: content,
+                    ));
                     Navigator.pop(context);
                   },
                   child: const Text('Save'),
@@ -125,18 +143,16 @@ class _NotesAppState extends State<NotesApp> {
             itemCount: _notes.length,
             itemBuilder: (context, index) {
               return Container(
-               // 
-                decoration:BoxDecoration(
+                //
+                decoration: BoxDecoration(
                   color: Theme.of(context).secondaryHeaderColor,
                   border: Border.all(color: ui.extra),
                   borderRadius: BorderRadius.circular(10),
-
-                ) ,
+                ),
                 child: ListTile(
-                  
-                  title: Text(_notes[index].title
-                  ),
-                  subtitle: Text(_notes[index].content,
+                  title: Text(_notes[index].title),
+                  subtitle: Text(
+                    _notes[index].content,
                   ),
                   trailing: Text(_notes[index].dateTime.toString()),
                 ),
