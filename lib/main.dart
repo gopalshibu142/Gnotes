@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import './colors.dart';
 import './database.dart';
-
+import './chat.dart';
 void main() async {
   // initDb();
-
+  Gemini.init(apiKey: 'AIzaSyC0Xblvqtas0p2NH5r1fnAsU9RE2lNBbGc');
   WidgetsFlutterBinding.ensureInitialized();
   await initializeHive();
   _notes = await getData();
@@ -47,6 +48,9 @@ class _NotesAppState extends State<NotesApp> {
   @override
   void initState() {
     initVal();
+   
+
+
     super.initState();
   }
 
@@ -69,10 +73,11 @@ class _NotesAppState extends State<NotesApp> {
                   topLeft: Radius.circular(20), topRight: Radius.circular(20))),
           padding: const EdgeInsets.all(16),
           child: Column(
-          //  crossAxisAlignment: CrossAxisAlignment.,
+            //  crossAxisAlignment: CrossAxisAlignment.,
             children: [
               SizedBox(
-                height: 10,),
+                height: 10,
+              ),
               const Text(
                 'Add Note',
                 style: TextStyle(
@@ -81,14 +86,13 @@ class _NotesAppState extends State<NotesApp> {
                 ),
               ),
               SizedBox(
-                height: 10,),
+                height: 10,
+              ),
               TextField(
                 controller: titleController,
                 decoration: const InputDecoration(
                   labelText: 'Title',
-                  
                 ),
-              
               ),
               const SizedBox(height: 16),
               TextField(
@@ -102,7 +106,7 @@ class _NotesAppState extends State<NotesApp> {
               SizedBox(
                 width: 100,
                 child: ElevatedButton(
-                  onPressed: () async{
+                  onPressed: () async {
                     if (titleController.text.isEmpty ||
                         contentController.text.isEmpty) {
                       //show alert dialog
@@ -129,7 +133,7 @@ class _NotesAppState extends State<NotesApp> {
                     var note = Note(
                       dateTime: DateTime.now(),
                       title: titleController.text,
-                      content:  contentController.text,
+                      content: contentController.text,
                     );
                     setState(() {
                       _notes.add(note);
@@ -143,10 +147,8 @@ class _NotesAppState extends State<NotesApp> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    
                   ),
                 ),
-                  
               ),
             ],
           ),
@@ -158,6 +160,13 @@ class _NotesAppState extends State<NotesApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: ui.background,
+        elevation: 0,
+        actions: [IconButton(onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context)=>ChatUI()));
+        }, icon: Icon(Icons.menu))],
+      ),
       backgroundColor: ui.background,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -194,7 +203,6 @@ class _NotesAppState extends State<NotesApp> {
                           //
                           //padding: EdgeInsets.all(5),
                           decoration: BoxDecoration(
-
                             color: ui.primaryColor,
                             border: Border.all(color: ui.extra),
                             borderRadius: BorderRadius.circular(10),
@@ -207,7 +215,7 @@ class _NotesAppState extends State<NotesApp> {
                               ),
                             ],
                           ),
-                          
+
                           child: ListTile(
                             title: Text(_notes[index].title),
                             subtitle: Text(
@@ -235,7 +243,6 @@ class _NotesAppState extends State<NotesApp> {
                                         onPressed: () {
                                           setState(() {
                                             _notes.removeAt(index);
-                                            
                                           });
                                           deleteData(index);
                                           Navigator.pop(context);
@@ -248,21 +255,23 @@ class _NotesAppState extends State<NotesApp> {
                               );
                             },
                             trailing: Text(
-                                _notes[index].dateTime.day.toString() +
-                                    '/' +
-                                    _notes[index].dateTime.month.toString() +
-                                    '/' +
-                                    _notes[index].dateTime.year.toString() +
-                                    '\n\n' +
-                                    [
-                                      'Monday',
-                                      'Tuesday',
-                                      'Wednesday',
-                                      'Thursday',
-                                      'Friday',
-                                      'Saturday',
-                                      'Sunday'
-                                    ][_notes[index].dateTime.weekday - 1]),
+                              _notes[index].dateTime.day.toString() +
+                                  '/' +
+                                  _notes[index].dateTime.month.toString() +
+                                  '/' +
+                                  _notes[index].dateTime.year.toString() +
+                                  '\n' +
+                                  [
+                                    'Monday',
+                                    'Tuesday',
+                                    'Wednesday',
+                                    'Thursday',
+                                    'Friday',
+                                    'Saturday',
+                                    'Sunday'
+                                  ][_notes[index].dateTime.weekday - 1],
+                              maxLines: null,
+                            ),
                           ),
                         ),
                       );

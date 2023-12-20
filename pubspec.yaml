@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   hive: ^2.2.3
   path_provider: ^2.1.1
+  flutter_gemini: ^1.0.1
+  flutter_chat_ui: ^1.6.10
 
 dev_dependencies:
   flutter_test:
